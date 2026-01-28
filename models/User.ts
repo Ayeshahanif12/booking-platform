@@ -19,7 +19,26 @@ const userSchema = new Schema({
     enum: ['user', 'provider', 'admin'],
     default: 'user',
   },
-  isBlocked: {
+  blocked: {
+    type: Boolean,
+    default: false,
+  },
+  blockReason: {
+    type: String,
+  },
+  totalEarnings: {
+    type: Number,
+    default: 0,
+  },
+  totalBookings: {
+    type: Number,
+    default: 0,
+  },
+  averageRating: {
+    type: Number,
+    default: 0,
+  },
+  verified: {
     type: Boolean,
     default: false,
   },

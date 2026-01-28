@@ -21,19 +21,21 @@ export async function PUT(
       );
     }
 
-    const { isBlocked } = await req.json();
+    const { blocked, blockReason } = await req.json();
 
-    targetUser.isBlocked = isBlocked;
+    targetUser.blocked = blocked;
+    targetUser.blockReason = blockReason || null;
     await targetUser.save();
 
     return NextResponse.json({
-      message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
+      message: `User ${blocked ? 'blocked' : 'unblocked'} successfully`,
       user: {
         id: targetUser._id,
         name: targetUser.name,
         email: targetUser.email,
         role: targetUser.role,
-        isBlocked: targetUser.isBlocked,
+        blocked: targetUser.blocked,
+        blockReason: targetUser.blockReason,
       },
     });
   } catch (error: any) {
@@ -41,6 +43,47 @@ export async function PUT(
                    error.message === 'Forbidden' ? 403 : 500;
     return NextResponse.json(
       { error: error.message || 'Failed to update user' },
+      { status }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = requireAuth(req);
+    requireRole(user, ['admin']);
+
+    await connectDB();
+
+    const targetUser = await User.findById(params.id);
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Prevent deleting admin users
+    if (targetUser.role === 'admin') {
+      return NextResponse.json(
+        { error: 'Cannot delete admin users' },
+        { status: 403 }
+      );
+    }
+
+    await User.deleteOne({ _id: params.id });
+
+    return NextResponse.json({
+      message: 'User deleted successfully',
+    });
+  } catch (error: any) {
+    const status = error.message === 'Unauthorized' || error.message === 'Invalid token' ? 401 : 
+                   error.message === 'Forbidden' ? 403 : 500;
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete user' },
       { status }
     );
   }

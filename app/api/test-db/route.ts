@@ -5,7 +5,11 @@ export async function GET() {
   try {
     await connectDB();
     return NextResponse.json({ success: true });
-  } catch (err) {
-    return NextResponse.json({ success: false });
+  } catch (error: any) {
+    console.error("DB ERROR:", error.message);
+    return NextResponse.json({
+      success: false,
+      error: error.message,
+    });
   }
 }

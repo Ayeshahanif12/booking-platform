@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const { title, description, price } = await req.json();
+    const { title, description, category, pricePerHour, duration, price } = await req.json();
 
-    if (!title || !description || price === undefined) {
+    if (!title || !description || pricePerHour === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -45,7 +45,10 @@ export async function POST(req: NextRequest) {
     const service = await Service.create({
       title,
       description,
-      price,
+      category: category || 'Other',
+      pricePerHour,
+      price: price || pricePerHour,
+      duration: duration || 60,
       providerId: user.userId,
     });
 

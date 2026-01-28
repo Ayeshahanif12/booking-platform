@@ -1,12 +1,20 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const poppins = Poppins({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins'
+})
 
 export const metadata: Metadata = {
-  title: 'Booking Platform',
-  description: 'Client-Service Booking Platform',
+  title: 'BookIt - Professional Service Booking Platform',
+  description: 'Book professional services with ease. Find and hire trusted service providers for all your needs.',
+  keywords: 'booking, services, providers, reservations, scheduling',
+  authors: [{ name: 'BookIt Team' }],
+  viewport: 'width=device-width, initial-scale=1.0',
 }
 
 export default function RootLayout({
@@ -15,8 +23,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body className={`${inter.variable} ${poppins.variable} font-sans bg-slate-950 text-gray-100 transition-colors duration-300`}>
+        <div className="min-h-screen flex flex-col">
+          {children}
+        </div>
+      </body>
     </html>
   )
 }
