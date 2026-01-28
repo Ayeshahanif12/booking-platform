@@ -330,7 +330,7 @@ export default function ServicesSearchPage() {
       <footer className="border-t border-slate-700 bg-slate-900/50 backdrop-blur py-8 px-4 sm:px-6 lg:px-8 mt-20">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-gray-500">
-            Search Results • Filters Applied • {filteredServices.length} Services Found
+            Search Results • Filters Applied • {filteredServices?.length || 0} Services Found
           </p>
         </div>
       </footer>
