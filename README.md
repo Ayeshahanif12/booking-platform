@@ -10,6 +10,18 @@ Production-ready client-service booking platform built with Next.js, MongoDB, an
 - **Authentication**: JWT (jsonwebtoken, bcryptjs)
 - **Deployment**: Vercel-ready
 
+## CV-Worthy Features (what makes this project stand out)
+
+- Audit logging: `AuditLog` model and non-blocking audit helper to record admin/provider destructive actions (deletes/updates). Great evidence of production-grade observability.
+- Seed script: `scripts/seed-sample.js` creates an admin, sample provider, user, service and booking for easy demos and interviews.
+- Containerization: `Dockerfile` and `docker-compose.yml` included for reproducible local and CI environments.
+- Role-based access control (Admin / Provider / User) enforced in API routes.
+- Admin dashboard with full platform visibility and management (providers, users, services, bookings).
+- Production-ready patterns: environment configuration, JWT auth, password hashing, and cascading deletes with audit trace.
+- Scripts: `npm run seed` to populate demo data and `npm run docker:build` / `npm run docker:up` to run in Docker.
+
+These features are useful to highlight on your CV or portfolio when demonstrating experience with backend operations, security, and deployment.
+
 ## Features
 
 ### User Roles

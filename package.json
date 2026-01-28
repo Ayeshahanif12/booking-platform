@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "node scripts/seed-sample.js",
+    "docker:build": "docker build -t booking-platform .",
+    "docker:up": "docker-compose up --build"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -4,7 +4,11 @@ import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET is not set in environment');
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,6 +43,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
+      );
+    }
+
+    if (!JWT_SECRET) {
+      return NextResponse.json(
+        { error: 'Server misconfiguration: JWT_SECRET not set' },
+        { status: 500 }
       );
     }
 

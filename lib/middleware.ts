@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.warn('JWT_SECRET is not set in environment - authentication will fail');
+}
 
 export interface AuthUser {
   userId: string;
@@ -17,6 +21,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthUser | null> {
       return null;
     }
 
+    if (!JWT_SECRET) throw new Error('Server misconfiguration: JWT_SECRET not set');
     const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
     return decoded;
   } catch (error) {
@@ -32,6 +37,7 @@ export function requireAuth(req: NextRequest): AuthUser {
   }
 
   try {
+    if (!JWT_SECRET) throw new Error('Server misconfiguration: JWT_SECRET not set');
     const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
     return decoded;
   } catch (error) {
