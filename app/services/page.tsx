@@ -144,7 +144,7 @@ export default function Services() {
               <div className="w-16 h-16 border-4 border-slate-700 border-t-blue-500 rounded-full spinner mb-4"></div>
               <p className="text-gray-400">Loading services...</p>
             </div>
-          ) : services.length === 0 ? (
+          ) : !services || services.length === 0 ? (
             <div className="text-center py-20 animate-slide-up">
               <p className="text-2xl text-gray-400 mb-4">No services available yet</p>
               <button

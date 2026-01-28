@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -35,23 +38,27 @@ export default function ProfilePage() {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleChangePassword = async () => {
-    const oldPassword = prompt('Enter current password:');
-    const newPassword = prompt('Enter new password:');
-    const confirmPassword = prompt('Confirm new password:');
+  const handlePasswordChange = (e: any) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleChangePassword = async (e: any) => {
+    e.preventDefault();
+    const { oldPassword, newPassword, confirmPassword } = passwordData;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      setMessage('All fields are required');
+      setPasswordMessage('❌ All fields are required');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage('Passwords do not match');
+      setPasswordMessage('❌ Passwords do not match');
       return;
     }
 
     if (newPassword.length < 6) {
-      setMessage('Password must be at least 6 characters');
+      setPasswordMessage('❌ Password must be at least 6 characters');
       return;
     }
 
@@ -69,13 +76,14 @@ export default function ProfilePage() {
 
       const data = await res.json();
       if (res.ok) {
-        setMessage('✅ Password changed successfully');
-        setTimeout(() => setMessage(''), 3000);
+        setPasswordMessage('✅ Password changed successfully!');
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => setPasswordMessage(''), 3000);
       } else {
-        setMessage(data.error || 'Failed to change password');
+        setPasswordMessage(`❌ ${data.error || 'Failed to change password'}`);
       }
     } catch (error) {
-      setMessage('Error changing password');
+      setPasswordMessage('❌ Error changing password');
     } finally {
       setLoading(false);
     }
@@ -101,14 +109,14 @@ export default function ProfilePage() {
         const updatedUser = await res.json();
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        setMessage('Profile updated successfully!');
+        setMessage('✅ Profile updated successfully!');
         setIsEditing(false);
         setTimeout(() => setMessage(''), 3000);
       } else {
-        setMessage('Failed to update profile');
+        setMessage('❌ Failed to update profile');
       }
     } catch (error) {
-      setMessage('Error updating profile');
+      setMessage('❌ Error updating profile');
     } finally {
       setLoading(false);
     }
@@ -164,16 +172,6 @@ export default function ProfilePage() {
             <p className="text-xl text-gray-300">Manage your account settings and information</p>
           </div>
 
-          {message && (
-            <div className={`mb-6 p-4 rounded-lg animate-slide-down ${
-              message.includes('success')
-                ? 'bg-green-900/30 text-green-300 border border-green-600/30'
-                : 'bg-red-900/30 text-red-300 border border-red-600/30'
-            }`}>
-              {message}
-            </div>
-          )}
-
           {/* Profile Card */}
           <div className="card-dark border border-slate-700 p-8 mb-8 animate-fade-in">
             {/* Avatar Section */}
@@ -196,123 +194,226 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {!isEditing ? (
-              <>
-                {/* Profile Info Display */}
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  <div className="bg-slate-800/50 rounded-lg p-4">
-                    <p className="text-gray-400 text-sm mb-2">Email Address</p>
-                    <p className="text-white font-semibold">{user.email}</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-lg p-4">
-                    <p className="text-gray-400 text-sm mb-2">Full Name</p>
-                    <p className="text-white font-semibold">{user.name}</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-lg p-4">
-                    <p className="text-gray-400 text-sm mb-2">Account Type</p>
-                    <p className="text-white font-semibold capitalize">{user.role}</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-lg p-4">
-                    <p className="text-gray-400 text-sm mb-2">Member Since</p>
-                    <p className="text-white font-semibold">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
+            {/* Tabs */}
+            <div className="flex gap-4 mb-8 border-b border-slate-700">
+              <button
+                onClick={() => {
+                  setActiveTab('profile');
+                  setIsEditing(false);
+                }}
+                className={`pb-4 font-semibold transition-all ${
+                  activeTab === 'profile'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                📋 Edit Profile
+              </button>
+              <button
+                onClick={() => setActiveTab('password')}
+                className={`pb-4 font-semibold transition-all ${
+                  activeTab === 'password'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                🔒 Change Password
+              </button>
+            </div>
 
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setFormData(user);
-                  }}
-                  className="btn-primary-dark"
-                >
-                  Edit Profile
-                </button>
-                <button
-                  onClick={handleChangePassword}
-                  className="btn-secondary-dark ml-3"
-                >
-                  Change Password
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Edit Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Full Name</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name || ''}
-                        onChange={handleChange}
-                        className="input-dark w-full"
-                        required
-                      />
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <div>
+                {message && (
+                  <div className={`mb-6 p-4 rounded-lg animate-slide-down ${
+                    message.includes('✅')
+                      ? 'bg-green-900/30 text-green-300 border border-green-600/30'
+                      : 'bg-red-900/30 text-red-300 border border-red-600/30'
+                  }`}>
+                    {message}
+                  </div>
+                )}
+
+                {!isEditing ? (
+                  <>
+                    {/* Profile Info Display */}
+                    <div className="grid md:grid-cols-2 gap-6 mb-8">
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm mb-2">Email Address</p>
+                        <p className="text-white font-semibold">{user.email}</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm mb-2">Full Name</p>
+                        <p className="text-white font-semibold">{user.name}</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm mb-2">Account Type</p>
+                        <p className="text-white font-semibold capitalize">{user.role}</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm mb-2">Member Since</p>
+                        <p className="text-white font-semibold">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Email Address</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email || ''}
-                        onChange={handleChange}
-                        className="input-dark w-full"
-                        required
-                      />
-                    </div>
+
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setFormData(user);
+                      }}
+                      className="btn-primary-dark"
+                    >
+                      Edit Profile
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Edit Form */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Full Name</label>
+                          <input
+                            type="text"
+                            name="name"
+                            value={formData.name || ''}
+                            onChange={handleChange}
+                            className="input-dark w-full"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Email Address</label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email || ''}
+                            onChange={handleChange}
+                            className="input-dark w-full"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-4">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className={`flex-1 btn-primary-dark ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {loading ? 'Saving...' : 'Save Changes'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setFormData(user);
+                          }}
+                          className="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-6 py-2 rounded-lg font-semibold transition-smooth"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Password Tab */}
+            {activeTab === 'password' && (
+              <div>
+                {passwordMessage && (
+                  <div className={`mb-6 p-4 rounded-lg animate-slide-down ${
+                    passwordMessage.includes('✅')
+                      ? 'bg-green-900/30 text-green-300 border border-green-600/30'
+                      : 'bg-red-900/30 text-red-300 border border-red-600/30'
+                  }`}>
+                    {passwordMessage}
+                  </div>
+                )}
+
+                <form onSubmit={handleChangePassword} className="space-y-6 max-w-lg">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Current Password</label>
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      value={passwordData.oldPassword}
+                      onChange={handlePasswordChange}
+                      className="input-dark w-full"
+                      placeholder="Enter your current password"
+                      required
+                    />
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="pt-4 border-t border-slate-700">
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">New Password</label>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      className="input-dark w-full mb-4"
+                      placeholder="Enter new password (minimum 6 characters)"
+                      required
+                    />
+
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Confirm New Password</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      className="input-dark w-full"
+                      placeholder="Confirm new password"
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-4">
                     <button
                       type="submit"
                       disabled={loading}
-                      className={`flex-1 btn-primary-dark ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full btn-primary-dark ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {loading ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setFormData(user);
-                      }}
-                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-6 py-2 rounded-lg font-semibold transition-smooth"
-                    >
-                      Cancel
+                      {loading ? 'Updating Password...' : 'Change Password'}
                     </button>
                   </div>
+
+                  <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4 text-sm text-blue-300">
+                    <p><strong>Security Tip:</strong> Use a strong password with a mix of uppercase, lowercase, numbers, and special characters.</p>
+                  </div>
                 </form>
-              </>
+              </div>
             )}
           </div>
 
-          {/* Additional Info */}
+          {/* Account Summary */}
           <div className="grid md:grid-cols-2 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {/* Security Card */}
             <div className="card-dark border border-slate-700 p-6">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <span>🔒</span> Security
+                <span>🔒</span> Security Status
               </h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Keep your account safe by managing your password
-              </p>
-              <button className="btn-secondary-dark w-full">
-                Change Password
-              </button>
+              <div className="space-y-2 text-sm text-gray-300">
+                <p><strong>Account:</strong> <span className="text-green-300">✓ Active</span></p>
+                <p><strong>Email:</strong> <span className="text-green-300">✓ Verified</span></p>
+                <p><strong>Password:</strong> <span className="text-green-300">✓ Protected</span></p>
+              </div>
             </div>
 
             {/* Account Info Card */}
             <div className="card-dark border border-slate-700 p-6">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <span>ℹ️</span> Account Info
+                <span>ℹ️</span> Account Details
               </h3>
               <div className="space-y-2 text-sm text-gray-300">
+                <p><strong>Role:</strong> <span className="text-blue-300 capitalize">{user.role}</span></p>
+                <p><strong>Joined:</strong> <span className="text-blue-300">{new Date(user.createdAt).toLocaleDateString()}</span></p>
                 <p><strong>Status:</strong> <span className="text-green-300">Active</span></p>
-                <p><strong>Verification:</strong> <span className="text-green-300">Verified</span></p>
-                <p><strong>2FA:</strong> <span className="text-yellow-300">Not Enabled</span></p>
               </div>
             </div>
           </div>
@@ -323,7 +424,7 @@ export default function ProfilePage() {
       <footer className="border-t border-slate-700 bg-slate-900/50 backdrop-blur py-8 px-4 sm:px-6 lg:px-8 mt-20">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-gray-500">
-            Profile • Account Settings • Privacy Policy
+            Profile • Account Settings • Security
           </p>
         </div>
       </footer>
