@@ -74,9 +74,18 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Login failed' },
-      { status: 500 }
-    );
+    // Log full error server-side for debugging
+    try {
+      console.error('Login error:', error && error.stack ? error.stack : error);
+    } catch (err) {
+      console.error('Failed to print error stack', err);
+    }
+
+    const responseBody: any = { error: error.message || 'Login failed' };
+    if (process.env.NODE_ENV === 'development' && error.stack) {
+      responseBody.stack = error.stack;
+    }
+
+    return NextResponse.json(responseBody, { status: 500 });
   }
 }
