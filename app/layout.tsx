@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 
@@ -9,12 +9,16 @@ const poppins = Poppins({
   variable: '--font-poppins'
 })
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1.0,
+}
+
 export const metadata: Metadata = {
   title: 'BookIt - Professional Service Booking Platform',
   description: 'Book professional services with ease. Find and hire trusted service providers for all your needs.',
   keywords: 'booking, services, providers, reservations, scheduling',
   authors: [{ name: 'BookIt Team' }],
-  viewport: 'width=device-width, initial-scale=1.0',
 }
 
 export default function RootLayout({

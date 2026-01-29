@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import connectDB from '@/lib/db';
 import User from '@/models/User';
 import Service from '@/models/Service';
 import Booking from '@/models/Booking';

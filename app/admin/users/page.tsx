@@ -254,7 +254,13 @@ export default function AdminUsers() {
                         </td>
                         <td className="px-6 py-4">
                           {user.role !== 'admin' && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                              <button
+                                onClick={() => router.push(`/admin/users/${user._id}`)}
+                                className="px-3 py-1 rounded text-xs font-bold bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 transition-all"
+                              >
+                                👁️ View
+                              </button>
                               <button
                                 onClick={() => handleBlockToggle(user._id, user.blocked)}
                                 className={`px-3 py-1 rounded text-xs font-bold transition-all ${

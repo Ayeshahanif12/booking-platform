@@ -1,5 +1,13 @@
-import mongoose from 'mongoose';
 import dns from 'dns';
+import mongoose from 'mongoose';
+
+// Set DNS servers IMMEDIATELY at module load, before any network operations
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+  console.log('DNS servers set to Google DNS');
+} catch (err) {
+  console.warn('Could not set DNS servers:', err?.message || err);
+}
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
@@ -13,30 +21,40 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-async function connectDB() {
+async function connectDB(retries = 3) {
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    // Prefer public DNS resolvers to reduce intermittent SRV lookup failures
-    try {
-      dns.setServers(['8.8.8.8', '8.8.4.4']);
-    } catch (err) {
-      // non-fatal
-      console.warn('Could not set DNS servers:', err?.message || err);
-    }
+    cached.promise = (async () => {
+      let lastError: any;
+      
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const opts = {
+            bufferCommands: false,
+            serverSelectionTimeoutMS: 15000,
+            connectTimeoutMS: 15000,
+          } as any;
 
-    const opts = {
-      bufferCommands: false,
-      // shorten server selection timeout so failures surface quickly
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
-    } as any;
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then(() => {
-      return cached;
-    });
+          console.log(`[DB] Connection attempt ${attempt}/${retries}...`);
+          await mongoose.connect(MONGODB_URI, opts);
+          console.log('[DB] Connected successfully');
+          return cached;
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`[DB] Attempt ${attempt} failed:`, err?.message || err);
+          
+          if (attempt < retries) {
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+          }
+        }
+      }
+      
+      throw lastError;
+    })();
   }
 
   try {
