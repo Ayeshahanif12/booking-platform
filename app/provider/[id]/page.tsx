@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -41,24 +42,9 @@ export default function ProviderProfile() {
       console.error('Failed to fetch services');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleBook = async (serviceId: string, service: any) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    if (!bookingData.date || !bookingData.time) {
-      setNotification({ message: 'Please select date and time', type: 'error' });
-      setTimeout(() => setNotification(null), 3000);
-      return;
-    }
-
-    const duration = service.duration || 60;
-    const pricePerHour = service.pricePerHour || 0;
+    }  };  const handleBook = async (serviceId: string, service: any) => {    const token = localStorage.getItem('token');    if (!token) {      router.push('/login');      return;    }    if (!bookingData.date || !bookingData.time) {      setNotification({ message: 'Please select date and time', type: 'error' });      setTimeout(() => setNotification(null), 3000);      return;    }
+   const duration = service.duration || 60;
+   const pricePerHour = service.pricePerHour || 0;
     const totalPrice = (duration / 60) * pricePerHour;
 
     try {
@@ -78,7 +64,7 @@ export default function ProviderProfile() {
           totalPrice: totalPrice,
           description: `Booking for ${service.title}`,
         }),
-      });
+   });
 
       if (res.ok) {
         setNotification({ message: 'Booking created successfully! Amount: $' + totalPrice.toFixed(2), type: 'success' });
@@ -151,7 +137,7 @@ export default function ProviderProfile() {
             </div>
           </div>
         </div>
-      </nav>
+ </nav>
 
       <main className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -281,6 +267,8 @@ export default function ProviderProfile() {
       </main>
 
       {/* Booking Modal */}
+
+      {/* Booking Modal */}
       {bookingModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="card-dark p-8 max-w-md w-full border border-slate-700 animate-scale-in">
@@ -316,9 +304,9 @@ export default function ProviderProfile() {
                   className="input-dark w-full"
                   required
                 />
-              </div>
-            </div>
-
++              </div>
++            </div>
++
             {/* Booking Summary */}
             <div className="bg-slate-800/50 p-4 rounded-lg mb-6 border border-slate-700 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <p className="text-gray-400 text-sm mb-2">Total Cost</p>
@@ -332,12 +320,12 @@ export default function ProviderProfile() {
                 onClick={() => handleBook(bookingModal._id, bookingModal)}
                 className="flex-1 btn-primary-dark"
               >
-                Confirm Booking
-              </button>
-              <button
++                Confirm Booking
++              </button>
++              <button
                 onClick={() => {
-                  setBookingModal(null);
-                  setBookingData({ date: '', time: '' });
++                  setBookingModal(null);
++                  setBookingData({ date: '', time: '' });
                 }}
                 className="flex-1 btn-secondary-dark"
               >

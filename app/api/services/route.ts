@@ -5,23 +5,26 @@ import { requireAuth, requireRole } from '@/lib/middleware';
 
 export async function GET(req: NextRequest) {
   try {
+    // Allow public access to fetch services
     await connectDB();
 
     const { searchParams } = new URL(req.url);
     const providerId = searchParams.get('providerId');
 
-    let query = {};
+    let query: any = {};
+
     if (providerId) {
-      query = { providerId };
+      query.providerId = providerId;
     }
 
-    const services = await Service.find(query).populate('providerId', 'name email');
+    const services = await Service.find(query).populate('providerId', 'name email averageRating');
 
     return NextResponse.json({ services });
   } catch (error: any) {
+    const status = error.message === 'Unauthorized' || error.message === 'Invalid token' ? 401 : 500;
     return NextResponse.json(
       { error: error.message || 'Failed to fetch services' },
-      { status: 500 }
+      { status }
     );
   }
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function ProviderServices() {
   const router = useRouter();
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editService, setEditService] = useState<any>(null);
@@ -57,13 +57,22 @@ export default function ProviderServices() {
   const fetchServices = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/services', {
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      let url = '/api/services';
+      if (user && user.role === 'provider') {
+        const userId = user.userId || user._id || user.id;
+        url = `/api/services?providerId=${userId}`;
+      }
+
+      const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       const data = await res.json();
-      setServices(data.services);
+      setServices(data.services || []);
     } catch (error) {
       console.error('Failed to fetch services');
     } finally {
@@ -227,7 +236,7 @@ export default function ProviderServices() {
               <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-500 rounded-full spinner mb-4"></div>
               <p className="text-gray-400">Loading services...</p>
             </div>
-          ) : services.length === 0 ? (
+          ) : !services || services.length === 0 ? (
             <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
               <p className="text-5xl mb-4">⭐</p>
               <p className="text-2xl font-bold mb-4">No Services Yet</p>
