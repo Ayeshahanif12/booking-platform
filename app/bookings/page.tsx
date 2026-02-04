@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function Bookings() {
   const router = useRouter();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -56,20 +58,7 @@ export default function Bookings() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return '⏳';
-      case 'accepted':
-        return '✅';
-      case 'rejected':
-        return '❌';
-      case 'completed':
-        return '🎉';
-      case 'cancelled':
-        return '🚫';
-      default:
-        return '📋';
-    }
+    return '';
   };
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -87,13 +76,16 @@ export default function Bookings() {
       });
 
       if (res.ok) {
-        alert('Booking cancelled successfully');
+        showToast('Booking cancelled successfully', 'success');
         fetchBookings();
       }
     } catch (error) {
-      alert('Error cancelling booking');
+      showToast('Error cancelling booking', 'error');
     }
   };
+
+  const getProviderIdValue = (providerId: any) =>
+    typeof providerId === 'string' ? providerId : providerId?._id;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
@@ -142,7 +134,7 @@ export default function Bookings() {
             </div>
           ) : bookings.length === 0 ? (
             <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
-              <p className="text-3xl mb-4">📋</p>
+              <p className="text-xl mb-4">No bookings</p>
               <p className="text-2xl font-bold mb-4">No Bookings Yet</p>
               <p className="text-gray-400 mb-6">
                 You haven't made any bookings. Explore services and create your first booking!
@@ -179,7 +171,7 @@ export default function Bookings() {
                             </p>
 
                             {/* Meta Information */}
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-700">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-700">
                               <div>
                                 <p className="text-gray-500 text-sm">Date</p>
                                 <p className="text-white font-semibold">
@@ -196,9 +188,15 @@ export default function Bookings() {
                                 <p className="text-white font-semibold">{booking.time}</p>
                               </div>
                               <div>
-                                <p className="text-gray-500 text-sm">Price</p>
+                                <p className="text-gray-500 text-sm">Price/Hour</p>
                                 <p className="text-blue-400 font-bold text-lg">
-                                  ${booking.serviceId?.price}
+                                  ${booking.serviceId?.pricePerHour ?? booking.serviceId?.price ?? 0}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500 text-sm">Total</p>
+                                <p className="text-emerald-400 font-bold text-lg">
+                                  ${booking.totalPrice ?? 0}
                                 </p>
                               </div>
                             </div>
@@ -206,9 +204,18 @@ export default function Bookings() {
                             {/* Provider Info */}
                             <div className="mt-4 p-3 bg-slate-800/50 rounded border border-slate-700">
                               <p className="text-gray-500 text-sm">Provider</p>
-                              <p className="text-white font-semibold">
-                                {booking.serviceId?.providerId?.name}
-                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const providerId = getProviderIdValue(booking.serviceId?.providerId);
+                                  if (providerId) {
+                                    router.push(`/provider/${providerId}`);
+                                  }
+                                }}
+                                className="text-white font-semibold hover:text-blue-300 transition text-left"
+                              >
+                                {booking.serviceId?.providerId?.name || 'Unknown provider'}
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -227,22 +234,22 @@ export default function Bookings() {
                         <div className="text-right mt-4">
                           {booking.status === 'pending' && (
                             <p className="text-yellow-400 text-sm">
-                              ⏳ Awaiting provider response
+                              Awaiting provider response
                             </p>
                           )}
                           {booking.status === 'accepted' && (
                             <p className="text-green-400 text-sm">
-                              ✅ Ready to go!
+                              Ready to go!
                             </p>
                           )}
                           {booking.status === 'rejected' && (
                             <p className="text-red-400 text-sm">
-                              ❌ Provider declined
+                              Provider declined
                             </p>
                           )}
                           {booking.status === 'cancelled' && (
                             <p className="text-gray-400 text-sm">
-                              🚫 Booking cancelled
+                              Booking cancelled
                             </p>
                           )}
                         </div>
@@ -259,8 +266,8 @@ export default function Bookings() {
                           )}
                           {booking.status === 'accepted' && (
                             <>
-                              <button className="btn-primary-dark text-sm">⭐ Rate</button>
-                              <button className="btn-secondary-dark text-sm">💬 Message</button>
+                              <button className="btn-primary-dark text-sm">Rate</button>
+                              <button className="btn-secondary-dark text-sm">Message</button>
                             </>
                           )}
                         </div>

@@ -1,112 +1,74 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
-export default function ProviderProfile() {
+export default function ProviderProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const [services, setServices] = useState<any[]>([]);
   const [provider, setProvider] = useState<any>(null);
+  const [services, setServices] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  
-  // Booking state
-  const [bookingModal, setBookingModal] = useState<any>(null);
-  const [bookingData, setBookingData] = useState({ date: '', time: '' });
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-    
-    if (params.id) {
-      fetchProviderServices(params.id as string);
-    }
+    const providerId = params.id as string | undefined;
+    if (!providerId) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/providers/${providerId}`);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to load provider profile');
+        }
+
+        setProvider(data.provider);
+        setServices(data.services || []);
+        setReviews(data.reviews || []);
+        setStats(data.stats || null);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load provider profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, [params.id]);
 
-  const fetchProviderServices = async (id: string) => {
+  const formatDate = (value: string) => {
     try {
-      const res = await fetch(`/api/services?providerId=${id}`);
-      const data = await res.json();
-      setServices(data.services || []);
-      
-      // Extract provider info from the first service if available
-      if (data.services && data.services.length > 0) {
-        setProvider(data.services[0].providerId);
-      }
-    } catch (error) {
-      console.error('Failed to fetch services');
-    } finally {
-      setLoading(false);
-    }  };  const handleBook = async (serviceId: string, service: any) => {    const token = localStorage.getItem('token');    if (!token) {      router.push('/login');      return;    }    if (!bookingData.date || !bookingData.time) {      setNotification({ message: 'Please select date and time', type: 'error' });      setTimeout(() => setNotification(null), 3000);      return;    }
-   const duration = service.duration || 60;
-   const pricePerHour = service.pricePerHour || 0;
-    const totalPrice = (duration / 60) * pricePerHour;
+      return new Date(value).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
 
+  const handleCopyId = async () => {
+    if (!provider?._id) return;
     try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          serviceId,
-          serviceName: service.title,
-          category: service.category,
-          date: bookingData.date,
-          time: bookingData.time,
-          duration: duration,
-          totalPrice: totalPrice,
-          description: `Booking for ${service.title}`,
-        }),
-   });
-
-      if (res.ok) {
-        setNotification({ message: 'Booking created successfully! Amount: $' + totalPrice.toFixed(2), type: 'success' });
-        setTimeout(() => setNotification(null), 4000);
-        setBookingModal(null);
-        setBookingData({ date: '', time: '' });
-        if (params.id) fetchProviderServices(params.id as string);
-      } else {
-        const errorData = await res.json();
-        setNotification({ message: errorData.error || 'Failed to create booking', type: 'error' });
-        setTimeout(() => setNotification(null), 4000);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setNotification({ message: 'Error creating booking', type: 'error' });
-      setTimeout(() => setNotification(null), 4000);
+      await navigator.clipboard.writeText(provider._id);
+      showToast('Provider ID copied', 'success');
+    } catch {
+      showToast('Unable to copy Provider ID', 'error');
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
-      {/* Notification Toast */}
-      {notification && (
-        <div className={`fixed top-24 right-4 z-[60] px-6 py-4 rounded-lg shadow-xl animate-slide-in border backdrop-blur-md ${
-          notification.type === 'success' 
-            ? 'bg-emerald-900/90 border-emerald-500 text-white' 
-            : 'bg-red-900/90 border-red-500 text-white'
-        }`}>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{notification.type === 'success' ? '✅' : '⚠️'}</span>
-            <div>
-              <h4 className="font-bold">{notification.type === 'success' ? 'Success' : 'Error'}</h4>
-              <p className="text-sm opacity-90">{notification.message}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Animated background elements */}
+      {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
       </div>
 
       {/* Navigation */}
@@ -114,227 +76,192 @@ export default function ProviderProfile() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <button
-              onClick={() => router.push('/')}
-              className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition"
+              onClick={() => router.push('/search')}
+              className="text-3xl font-bold bg-gradient-to-r from-red-400 to-blue-400 bg-clip-text text-transparent hover:opacity-80 transition"
             >
               BookIt
             </button>
-            <div className="flex gap-3 md:gap-4">
-              <button
-                onClick={() => router.push('/services')}
-                className="text-gray-400 hover:text-blue-400 transition-colors"
-              >
-                All Services
-              </button>
-              {user && (
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="btn-primary-dark text-sm md:text-base"
-                >
-                  Dashboard
-                </button>
-              )}
-            </div>
+            <button
+              onClick={() => router.push('/search')}
+              className="btn-primary-dark"
+            >
+              Back to Search
+            </button>
           </div>
         </div>
- </nav>
+      </nav>
 
       <main className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Back Button */}
-          <button
-            onClick={() => router.push('/services')}
-            className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Services
-          </button>
-
-          {/* Provider Header */}
-          <div className="mb-12 animate-slide-down bg-slate-900/50 p-8 rounded-2xl border border-slate-700 backdrop-blur-sm">
-            {loading ? (
-               <div className="flex items-center gap-4">
-                 <div className="w-20 h-20 rounded-full bg-slate-800 animate-pulse"></div>
-                 <div className="space-y-2">
-                   <div className="h-8 w-48 bg-slate-800 rounded animate-pulse"></div>
-                   <div className="h-4 w-32 bg-slate-800 rounded animate-pulse"></div>
-                 </div>
-               </div>
-            ) : provider ? (
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-4xl font-bold shadow-xl border-4 border-slate-800">
-                  {provider.name?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{provider.name}</h1>
-                  <div className="flex flex-wrap items-center gap-4 text-gray-300">
-                    <p className="flex items-center gap-2">
-                      <span className="text-blue-400">📧</span> {provider.email}
-                    </p>
-                    {provider.averageRating > 0 && (
-                      <span className="flex items-center gap-1 bg-yellow-400/10 px-3 py-1 rounded-full border border-yellow-400/20 text-yellow-400 font-semibold">
-                        <span>★</span> {provider.averageRating.toFixed(1)} Rating
-                      </span>
-                    )}
-                    <span className="bg-slate-800 px-3 py-1 rounded-full text-sm border border-slate-600">
-                      {services.length} Services Available
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-xl text-gray-400">Provider information not available</p>
-              </div>
-            )}
-          </div>
-
-          <h2 className="text-2xl font-bold mb-6 pl-2 border-l-4 border-blue-500">Services Offered</h2>
-
+        <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
               <div className="w-16 h-16 border-4 border-slate-700 border-t-blue-500 rounded-full spinner mb-4"></div>
-              <p className="text-gray-400">Loading services...</p>
+              <p className="text-gray-400">Loading provider profile...</p>
             </div>
-          ) : services.length === 0 ? (
-            <div className="text-center py-20 animate-slide-up card-dark p-12 border border-slate-700">
-              <p className="text-2xl text-gray-400 mb-4">No services available from this provider</p>
+          ) : error ? (
+            <div className="card-dark p-10 border border-slate-700 text-center">
+              <p className="text-xl text-red-300 mb-2">Unable to load provider</p>
+              <p className="text-gray-400">{error}</p>
             </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-              {services.map((service: any, idx: number) => (
-                <div
-                  key={service._id}
-                  className="card-dark p-6 border border-slate-700 hover:border-blue-500/50 group overflow-hidden relative h-full animate-slide-up"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  {/* Animated gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-transparent to-purple-600/0 group-hover:from-blue-600/10 group-hover:to-purple-600/10 transition-all duration-300"></div>
-
-                  {/* Active Status Badge */}
-                  <div className="absolute top-4 right-4 z-20">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border shadow-sm ${
-                      service.available 
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                        : 'bg-red-500/10 border-red-500/30 text-red-400'
-                    }`}>{service.available ? 'Active' : 'Inactive'}</span>
+          ) : provider ? (
+            <div className="space-y-10">
+              {/* Provider Header */}
+              <div className="card-dark p-8 border border-slate-700 animate-slide-down">
+                <div className="flex flex-col md:flex-row gap-6 md:items-center">
+                  <div className="h-24 w-24 rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 flex items-center justify-center text-4xl font-bold shadow-xl border-4 border-slate-800">
+                    {provider.name?.charAt(0).toUpperCase()}
                   </div>
-
-                  <div className="relative z-10 flex flex-col h-full">
-                    <h3 className="text-xl font-bold mb-3 group-hover:text-blue-300 transition-colors">
-                      {service.title}
-                    </h3>
-                    <p className="text-gray-400 mb-4 flex-grow">
-                      {service.description}
-                    </p>
-
-                    <div className="space-y-3 mb-6 py-4 border-t border-slate-700">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Price</span>
-                        <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                          ${service.price}
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h1 className="text-3xl md:text-4xl font-bold">{provider.name}</h1>
+                      {provider.verified && (
+                        <span className="bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full">
+                          Verified
                         </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                         <span className="text-gray-400">Duration</span>
-                         <span className="text-blue-300">{service.duration} mins</span>
-                      </div>
+                      )}
                     </div>
-
-                    {/* Action Button */}
-                    {user && user.role === 'user' && (
+                    <p className="text-gray-400">{provider.email}</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-300">
+                      <span>Active since {formatDate(provider.createdAt)}</span>
+                      <span>Last active {formatDate(provider.updatedAt)}</span>
+                      <span className="bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                        Rating {stats?.averageRating ?? 0}/5
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                      <span className="bg-slate-900/60 px-3 py-1 rounded-full border border-slate-700">
+                        Provider ID: {provider._id}
+                      </span>
                       <button
-                        onClick={() => setBookingModal(service)}
-                        className="w-full btn-primary-dark mt-auto group-hover:scale-105 transition-transform duration-300"
+                        type="button"
+                        onClick={handleCopyId}
+                        className="btn-secondary-dark px-3 py-1 text-xs"
                       >
-                        Book Now →
+                        Copy ID
                       </button>
-                    )}
-
-                    {!user && (
-                      <button
-                        onClick={() => router.push('/login')}
-                        className="w-full btn-secondary-dark mt-auto"
-                      >
-                        Login to Book
-                      </button>
-                    )}
+                    </div>
                   </div>
                 </div>
-              ))}
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                    <p className="text-gray-400 text-sm mb-1">Total Services</p>
+                    <p className="text-2xl font-bold text-blue-300">{stats?.totalServices ?? 0}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                    <p className="text-gray-400 text-sm mb-1">Total Reviews</p>
+                    <p className="text-2xl font-bold text-emerald-300">{stats?.totalReviews ?? 0}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                    <p className="text-gray-400 text-sm mb-1">Completed Bookings</p>
+                    <p className="text-2xl font-bold text-indigo-300">{stats?.completedBookings ?? 0}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                    <p className="text-gray-400 text-sm mb-1">Response Rate</p>
+                    <p className="text-2xl font-bold text-yellow-300">{stats?.responseRate ?? 0}%</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Services */}
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Services</h2>
+                {services.length === 0 ? (
+                  <div className="card-dark p-8 border border-slate-700 text-center text-gray-400">
+                    <p className="mb-4">No services available from this provider.</p>
+                    <button
+                      onClick={() => router.push('/search')}
+                      className="btn-primary-dark"
+                    >
+                      Browse Services
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {services.map((service, idx) => (
+                      <div
+                        key={service._id}
+                        className="card-dark p-6 border border-slate-700 hover:border-blue-500/50 transition animate-slide-up"
+                        style={{ animationDelay: `${idx * 0.05}s` }}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="text-xl font-bold">{service.title}</h3>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${
+                            service.available
+                              ? 'bg-emerald-500/10 border-emerald-400/30 text-emerald-300'
+                              : 'bg-red-500/10 border-red-400/30 text-red-300'
+                          }`}>
+                            {service.available ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-4">{service.description}</p>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <p className="text-gray-500 text-xs">Price/Hour</p>
+                            <p className="text-blue-300 font-semibold">${service.pricePerHour}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 text-xs">Duration</p>
+                            <p className="text-emerald-300 font-semibold">{service.duration || 60} mins</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => router.push(`/services/${service._id}`)}
+                          className="btn-primary-dark w-full"
+                        >
+                          View & Book
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Reviews */}
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Reviews</h2>
+                {reviews.length === 0 ? (
+                  <div className="card-dark p-8 border border-slate-700 text-center text-gray-400">
+                    <p className="mb-4">No reviews yet.</p>
+                    <button
+                      onClick={() => router.push('/search')}
+                      className="btn-secondary-dark"
+                    >
+                      Explore Services
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="card-dark p-6 border border-slate-700">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold">{review.userId?.name || 'Customer'}</p>
+                          <span className="text-sm text-gray-400">
+                            {formatDate(review.createdAt)}
+                          </span>
+                        </div>
+                        <div className="text-yellow-300 text-sm mb-2">
+                          Rating: {review.rating ?? 'N/A'}
+                        </div>
+                        {review.review ? (
+                          <p className="text-gray-300">{review.review}</p>
+                        ) : (
+                          <p className="text-gray-500 text-sm">No written review.</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="card-dark p-10 border border-slate-700 text-center text-gray-400">
+              Provider not found.
             </div>
           )}
         </div>
       </main>
-
-      {/* Booking Modal */}
-
-      {/* Booking Modal */}
-      {bookingModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="card-dark p-8 max-w-md w-full border border-slate-700 animate-scale-in">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold mb-2">
-                Book <span className="text-gradient">{bookingModal.title}</span>
-              </h2>
-              <p className="text-gray-400">Schedule your service booking</p>
-            </div>
-
-            <div className="space-y-5 mb-6">
-              <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                <label className="block text-gray-300 font-medium mb-3">Select Date</label>
-                <input
-                  type="date"
-                  value={bookingData.date}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, date: e.target.value })
-                  }
-                  className="input-dark w-full"
-                  required
-                />
-              </div>
-
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <label className="block text-gray-300 font-medium mb-3">Select Time</label>
-                <input
-                  type="time"
-                  value={bookingData.time}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, time: e.target.value })
-                  }
-                  className="input-dark w-full"
-                  required
-                />
-+              </div>
-+            </div>
-+
-            {/* Booking Summary */}
-            <div className="bg-slate-800/50 p-4 rounded-lg mb-6 border border-slate-700 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <p className="text-gray-400 text-sm mb-2">Total Cost</p>
-              <p className="text-2xl font-bold text-blue-400">
-                ${bookingModal.price}
-              </p>
-            </div>
-
-            <div className="flex gap-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <button
-                onClick={() => handleBook(bookingModal._id, bookingModal)}
-                className="flex-1 btn-primary-dark"
-              >
-+                Confirm Booking
-+              </button>
-+              <button
-                onClick={() => {
-+                  setBookingModal(null);
-+                  setBookingData({ date: '', time: '' });
-                }}
-                className="flex-1 btn-secondary-dark"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

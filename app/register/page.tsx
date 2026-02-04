@@ -117,10 +117,10 @@ export default function Register() {
                 className="input-dark w-full"
               >
                 <option value="user" className="bg-slate-800 text-white">
-                  👤 Service Customer
+                  Service Customer
                 </option>
                 <option value="provider" className="bg-slate-800 text-white">
-                  ⭐ Service Provider
+                  Service Provider
                 </option>
               </select>
               <p className="text-gray-500 text-sm mt-2">

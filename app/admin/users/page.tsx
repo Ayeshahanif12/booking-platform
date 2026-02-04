@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function AdminUsers() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('all');
@@ -52,7 +54,7 @@ export default function AdminUsers() {
   const handleBlockToggle = async (userId: string, isBlocked: boolean) => {
     const reason = !isBlocked ? prompt('Enter reason for blocking:') : null;
     if (!reason && !isBlocked) {
-      alert('Reason is required');
+      showToast('Reason is required', 'error');
       return;
     }
 
@@ -71,7 +73,7 @@ export default function AdminUsers() {
       });
 
       if (res.ok) {
-        alert(isBlocked ? 'User unblocked' : 'User blocked successfully');
+        showToast(isBlocked ? 'User unblocked' : 'User blocked successfully', 'success');
         await fetchUsers();
       }
     } catch (error) {
@@ -94,7 +96,7 @@ export default function AdminUsers() {
       });
 
       if (res.ok) {
-        alert('User deleted successfully');
+        showToast('User deleted successfully', 'success');
         await fetchUsers();
       }
     } catch (error) {
@@ -195,7 +197,7 @@ export default function AdminUsers() {
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
-              <p className="text-5xl mb-4">👥</p>
+              <p className="text-xl mb-4">No users</p>
               <p className="text-2xl font-bold mb-4">No Users Found</p>
               <p className="text-gray-400">No users match your filter criteria</p>
             </div>
@@ -246,7 +248,7 @@ export default function AdminUsers() {
                               ? 'bg-red-900/30 text-red-300'
                               : 'bg-green-900/30 text-green-300'
                           }`}>
-                            {user.blocked ? '🔒 Blocked' : '✅ Active'}
+                            {user.blocked ? 'Blocked' : 'Active'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-gray-400">
@@ -259,7 +261,7 @@ export default function AdminUsers() {
                                 onClick={() => router.push(`/admin/users/${user._id}`)}
                                 className="px-3 py-1 rounded text-xs font-bold bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 transition-all"
                               >
-                                👁️ View
+                                View
                               </button>
                               <button
                                 onClick={() => handleBlockToggle(user._id, user.blocked)}
@@ -269,13 +271,13 @@ export default function AdminUsers() {
                                     : 'bg-red-900/30 text-red-300 hover:bg-red-900/50'
                                 }`}
                               >
-                                {user.blocked ? '✅ Unblock' : '🚫 Block'}
+                                {user.blocked ? 'Unblock' : 'Block'}
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(user._id, user.name)}
                                 className="px-3 py-1 rounded text-xs font-bold bg-orange-900/30 text-orange-300 hover:bg-orange-900/50 transition-all"
                               >
-                                🗑️ Delete
+                                Delete
                               </button>
                             </div>
                           )}

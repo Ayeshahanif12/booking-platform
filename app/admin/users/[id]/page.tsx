@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function AdminUserProfile() {
   const router = useRouter();
   const params = useParams();
+  const { showToast } = useToast();
   const userId = params.id as string;
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export default function AdminUserProfile() {
   const handleBlockToggle = async () => {
     const reason = !user.blocked ? prompt('Enter reason for blocking:') : null;
     if (!reason && !user.blocked) {
-      alert('Reason is required');
+      showToast('Reason is required', 'error');
       return;
     }
 
@@ -72,7 +74,7 @@ export default function AdminUserProfile() {
       });
 
       if (res.ok) {
-        alert(user.blocked ? 'User unblocked' : 'User blocked successfully');
+        showToast(user.blocked ? 'User unblocked' : 'User blocked successfully', 'success');
         await fetchUserDetails();
       }
     } catch (error) {
@@ -95,7 +97,7 @@ export default function AdminUserProfile() {
       });
 
       if (res.ok) {
-        alert('User deleted successfully');
+        showToast('User deleted successfully', 'success');
         router.push('/admin/users');
       }
     } catch (error) {
@@ -170,7 +172,7 @@ export default function AdminUserProfile() {
                           ? 'bg-red-900/30 text-red-300'
                           : 'bg-green-900/30 text-green-300'
                       }`}>
-                        {user.blocked ? '🔒 BLOCKED' : '✅ ACTIVE'}
+                        {user.blocked ? 'BLOCKED' : 'ACTIVE'}
                       </span>
                     </div>
 
@@ -223,7 +225,7 @@ export default function AdminUserProfile() {
                     <div>
                       <p className="text-gray-400 text-sm mb-1">Verification Status</p>
                       <p className={user.verified ? 'text-green-400' : 'text-yellow-400'}>
-                        {user.verified ? '✅ Verified' : '⏳ Pending'}
+                        {user.verified ? 'Verified' : 'Pending'}
                       </p>
                     </div>
                   </div>
@@ -263,13 +265,13 @@ export default function AdminUserProfile() {
                         : 'bg-red-600 hover:bg-red-700 text-white'
                     }`}
                   >
-                    {user.blocked ? '✅ Unblock User' : '🚫 Block User'}
+                    {user.blocked ? 'Unblock User' : 'Block User'}
                   </button>
                   <button
                     onClick={handleDeleteUser}
                     className="px-6 py-3 rounded-lg font-bold bg-orange-600 hover:bg-orange-700 text-white transition-all"
                   >
-                    🗑️ Delete User
+                    Delete User
                   </button>
                   <button
                     onClick={() => router.push('/admin/users')}
@@ -282,7 +284,7 @@ export default function AdminUserProfile() {
             </>
           ) : (
             <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
-              <p className="text-5xl mb-4">❌</p>
+              <p className="text-xl mb-4">Not Found</p>
               <p className="text-2xl font-bold mb-4">User Not Found</p>
               <button
                 onClick={() => router.push('/admin/users')}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function ServiceDetail() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function ServiceDetail() {
   const [user, setUser] = useState<any>(null);
   const [bookingData, setBookingData] = useState({ date: '', time: '' });
   const [isScrolled, setIsScrolled] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -57,7 +59,16 @@ export default function ServiceDetail() {
     }
 
     if (!bookingData.date || !bookingData.time) {
-      alert('Please select date and time');
+      showToast('Please select date and time', 'error');
+      return;
+    }
+
+    const today = new Date();
+    const selectedDate = new Date(bookingData.date);
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      showToast('You cannot book a past date', 'error');
       return;
     }
 
@@ -85,16 +96,18 @@ export default function ServiceDetail() {
       });
 
       if (res.ok) {
-        alert('Booking created successfully! Amount: $' + totalPrice.toFixed(2));
+        showToast(`Booking created successfully! Amount: $${totalPrice.toFixed(2)}`, 'success', 1500);
         setBookingData({ date: '', time: '' });
-        router.push('/bookings');
+        setTimeout(() => {
+          router.push('/bookings');
+        }, 1500);
       } else {
         const errorData = await res.json();
-        alert(errorData.error || 'Failed to create booking');
+        showToast(errorData.error || 'Failed to create booking', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error creating booking');
+      showToast('Error creating booking', 'error');
     }
   };
 
@@ -124,7 +137,7 @@ export default function ServiceDetail() {
 
         <main className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="text-6xl mb-4">❌</div>
+            <div className="text-3xl mb-4">Service unavailable</div>
             <h1 className="text-4xl font-bold mb-4">Service Not Found</h1>
             <p className="text-gray-400 text-xl mb-8">The service you're looking for doesn't exist or has been removed.</p>
             <button onClick={() => router.push('/services')} className="btn-primary-dark">
@@ -162,8 +175,20 @@ export default function ServiceDetail() {
         <div className="max-w-5xl mx-auto">
           {/* Service Header */}
           <div className="animate-slide-down mb-12">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                service.available
+                  ? 'bg-emerald-500/10 border-emerald-400/30 text-emerald-300'
+                  : 'bg-red-500/10 border-red-400/30 text-red-300'
+              }`}>
+                {service.available ? 'Available' : 'Unavailable'}
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-blue-500/10 border-blue-400/30 text-blue-300 capitalize">
+                {service.category}
+              </span>
+            </div>
             <h1 className="heading-secondary mb-4">{service.title}</h1>
-            <p className="text-gray-300 text-lg">{service.description}</p>
+            <p className="text-gray-300 text-lg max-w-3xl">{service.description}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -173,7 +198,7 @@ export default function ServiceDetail() {
               <div className="card-dark border border-slate-700 p-8 animate-slide-up">
                 <h2 className="text-2xl font-bold mb-6 text-gradient">Service Details</h2>
 
-                <div className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div className="flex justify-between items-center pb-4 border-b border-slate-700">
                     <span className="text-gray-400">Category</span>
                     <span className="font-semibold capitalize bg-blue-900/30 text-blue-300 px-3 py-1 rounded">
@@ -194,14 +219,14 @@ export default function ServiceDetail() {
                   <div className="flex justify-between items-center pb-4 border-b border-slate-700">
                     <span className="text-gray-400">Status</span>
                     <span className={`font-semibold ${service.available ? 'text-green-400' : 'text-red-400'}`}>
-                      {service.available ? '✅ Available' : '❌ Unavailable'}
+                      {service.available ? 'Available' : 'Unavailable'}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">Rating</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">⭐</span>
+                      <span className="text-xl">*</span>
                       <span className="font-semibold">{service.rating || 0}/5</span>
                     </div>
                   </div>
@@ -217,7 +242,18 @@ export default function ServiceDetail() {
                       {service.providerId.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold">{service.providerId.name}</h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const providerId = service.providerId?._id;
+                          if (providerId) {
+                            router.push(`/provider/${providerId}`);
+                          }
+                        }}
+                        className="text-xl font-bold hover:text-blue-300 transition text-left"
+                      >
+                        {service.providerId.name}
+                      </button>
                       <p className="text-gray-400">{service.providerId.email}</p>
                     </div>
                   </div>
@@ -231,7 +267,7 @@ export default function ServiceDetail() {
                 <h3 className="text-2xl font-bold mb-6">Book Service</h3>
 
                 {service.available ? (
-                  <div className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                     {/* Date Input */}
                     <div>
                       <label className="block text-gray-400 text-sm mb-2 font-medium">Select Date</label>
@@ -239,6 +275,7 @@ export default function ServiceDetail() {
                         type="date"
                         value={bookingData.date}
                         onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                        min={new Date().toISOString().split('T')[0]}
                         className="input-dark w-full"
                       />
                     </div>
@@ -267,7 +304,7 @@ export default function ServiceDetail() {
                       onClick={handleBook}
                       className="btn-primary-dark w-full py-3 text-lg font-bold mt-6"
                     >
-                      📅 Book Now
+                      Book Now
                     </button>
 
                     {!user && (
@@ -278,7 +315,7 @@ export default function ServiceDetail() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-4xl mb-4">🚫</p>
+                    <p className="text-lg mb-4">Unavailable</p>
                     <p className="text-gray-300 font-semibold">This service is currently unavailable</p>
                   </div>
                 )}

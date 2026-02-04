@@ -40,7 +40,7 @@ export default function Dashboard() {
       {
         title: 'Browse Services',
         description: 'Explore and discover amazing services',
-        icon: '🔍',
+        icon: 'Search',
         path: '/search',
         gradient: 'from-blue-600 to-blue-500',
         delay: '0s',
@@ -48,7 +48,7 @@ export default function Dashboard() {
       {
         title: 'My Bookings',
         description: 'View and manage your reservations',
-        icon: '📅',
+        icon: 'Bookings',
         path: '/bookings',
         gradient: 'from-purple-600 to-purple-500',
         delay: '0.1s',
@@ -56,7 +56,7 @@ export default function Dashboard() {
       {
         title: 'My Profile',
         description: 'Edit your account settings',
-        icon: '👤',
+        icon: 'Profile',
         path: '/profile',
         gradient: 'from-emerald-600 to-emerald-500',
         delay: '0.2s',
@@ -66,7 +66,7 @@ export default function Dashboard() {
       {
         title: 'My Services',
         description: 'Create and manage your services',
-        icon: '⭐',
+        icon: 'Services',
         path: '/provider/services',
         gradient: 'from-emerald-600 to-emerald-500',
         delay: '0s',
@@ -74,7 +74,7 @@ export default function Dashboard() {
       {
         title: 'Booking Requests',
         description: 'Accept or reject service bookings',
-        icon: '🎯',
+        icon: 'Requests',
         path: '/provider/bookings',
         gradient: 'from-orange-600 to-orange-500',
         delay: '0.1s',
@@ -82,7 +82,7 @@ export default function Dashboard() {
       {
         title: 'Analytics',
         description: 'Track your earnings & performance',
-        icon: '📈',
+        icon: 'Analytics',
         path: '/provider/analytics',
         gradient: 'from-pink-600 to-pink-500',
         delay: '0.2s',
@@ -92,7 +92,7 @@ export default function Dashboard() {
       {
         title: 'Manage Users',
         description: 'View and manage user accounts',
-        icon: '👥',
+        icon: 'Users',
         path: '/admin/users',
         gradient: 'from-red-600 to-red-500',
         delay: '0s',
@@ -100,7 +100,7 @@ export default function Dashboard() {
       {
         title: 'All Bookings',
         description: 'Monitor all platform bookings',
-        icon: '📊',
+        icon: 'Reports',
         path: '/admin/bookings',
         gradient: 'from-blue-600 to-blue-500',
         delay: '0.1s',
@@ -108,7 +108,7 @@ export default function Dashboard() {
       {
         title: 'Browse Services',
         description: 'View all platform services',
-        icon: '🔍',
+        icon: 'Search',
         path: '/search',
         gradient: 'from-green-600 to-green-500',
         delay: '0.2s',
@@ -170,9 +170,9 @@ export default function Dashboard() {
               Welcome back, <span className="text-gradient">{user.name}</span>
             </h1>
             <p className="text-xl text-gray-300">
-              {user.role === 'user' && '✨ Explore amazing services and book with confidence'}
-              {user.role === 'provider' && '⭐ Manage your services and grow your business'}
-              {user.role === 'admin' && '🛡️ Monitor platform activity and manage users'}
+              {user.role === 'user' && 'Explore amazing services and book with confidence'}
+              {user.role === 'provider' && 'Manage your services and grow your business'}
+              {user.role === 'admin' && 'Monitor platform activity and manage users'}
             </p>
           </div>
 
@@ -200,7 +200,7 @@ export default function Dashboard() {
                   </p>
                   <div className="mt-6 flex items-center gap-2 text-blue-400 group-hover:gap-4 transition-all">
                     <span>Explore</span>
-                    <span className="text-xl">→</span>
+                    <span className="text-xl">-></span>
                   </div>
                 </div>
 

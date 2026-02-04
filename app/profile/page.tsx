@@ -48,17 +48,17 @@ export default function ProfilePage() {
     const { oldPassword, newPassword, confirmPassword } = passwordData;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      setPasswordMessage('❌ All fields are required');
+      setPasswordMessage('Error: All fields are required');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordMessage('❌ Passwords do not match');
+      setPasswordMessage('Error: Passwords do not match');
       return;
     }
 
     if (newPassword.length < 6) {
-      setPasswordMessage('❌ Password must be at least 6 characters');
+      setPasswordMessage('Error: Password must be at least 6 characters');
       return;
     }
 
@@ -76,14 +76,14 @@ export default function ProfilePage() {
 
       const data = await res.json();
       if (res.ok) {
-        setPasswordMessage('✅ Password changed successfully!');
+        setPasswordMessage('Success: Password changed successfully!');
         setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setTimeout(() => setPasswordMessage(''), 3000);
       } else {
-        setPasswordMessage(`❌ ${data.error || 'Failed to change password'}`);
+        setPasswordMessage(`Error: ${data.error || 'Failed to change password'}`);
       }
     } catch (error) {
-      setPasswordMessage('❌ Error changing password');
+      setPasswordMessage('Error: Error changing password');
     } finally {
       setLoading(false);
     }
@@ -109,14 +109,14 @@ export default function ProfilePage() {
         const updatedUser = await res.json();
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        setMessage('✅ Profile updated successfully!');
+        setMessage('Success: Profile updated successfully!');
         setIsEditing(false);
         setTimeout(() => setMessage(''), 3000);
       } else {
-        setMessage('❌ Failed to update profile');
+        setMessage('Error: Failed to update profile');
       }
     } catch (error) {
-      setMessage('❌ Error updating profile');
+      setMessage('Error: Error updating profile');
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function ProfilePage() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                📋 Edit Profile
+                Edit Profile
               </button>
               <button
                 onClick={() => setActiveTab('password')}
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                🔒 Change Password
+                Change Password
               </button>
             </div>
 
@@ -226,7 +226,7 @@ export default function ProfilePage() {
               <div>
                 {message && (
                   <div className={`mb-6 p-4 rounded-lg animate-slide-down ${
-                    message.includes('✅')
+                    message.startsWith('Success')
                       ? 'bg-green-900/30 text-green-300 border border-green-600/30'
                       : 'bg-red-900/30 text-red-300 border border-red-600/30'
                   }`}>
@@ -327,7 +327,7 @@ export default function ProfilePage() {
               <div>
                 {passwordMessage && (
                   <div className={`mb-6 p-4 rounded-lg animate-slide-down ${
-                    passwordMessage.includes('✅')
+                    passwordMessage.startsWith('Success')
                       ? 'bg-green-900/30 text-green-300 border border-green-600/30'
                       : 'bg-red-900/30 text-red-300 border border-red-600/30'
                   }`}>
@@ -396,7 +396,7 @@ export default function ProfilePage() {
             {/* Security Card */}
             <div className="card-dark border border-slate-700 p-6">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <span>🔒</span> Security Status
+                <span>Security Status</span>
               </h3>
               <div className="space-y-2 text-sm text-gray-300">
                 <p><strong>Account:</strong> <span className="text-green-300">✓ Active</span></p>

@@ -141,7 +141,7 @@ export default function ProviderAnalytics() {
             </div>
             <div className="card-dark p-6 border-0 border-l-4 border-yellow-500 text-center">
               <p className="text-gray-400 text-sm mb-2">Average Rating</p>
-              <p className="text-4xl font-bold text-yellow-400 mb-2">⭐ {stats.averageRating}</p>
+              <p className="text-4xl font-bold text-yellow-400 mb-2">Rating {stats.averageRating}</p>
               <p className="text-gray-400 text-sm">Completion: {stats.completionRate}</p>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function ProviderAnalytics() {
           <div className="grid md:grid-cols-2 gap-6 mb-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             {/* Booking Trends */}
             <div className="card-dark border border-slate-700 p-6">
-              <h3 className="text-xl font-bold mb-6">📈 Booking Trends</h3>
+              <h3 className="text-xl font-bold mb-6">Booking Trends</h3>
               <div className="space-y-4">
                 <div>
                   <p className="text-gray-400 text-sm mb-2">This Month</p>
@@ -195,18 +195,18 @@ export default function ProviderAnalytics() {
 
             {/* Customer Satisfaction */}
             <div className="card-dark border border-slate-700 p-6">
-              <h3 className="text-xl font-bold mb-6">😊 Customer Feedback</h3>
+              <h3 className="text-xl font-bold mb-6">Customer Feedback</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Very Satisfied (5★)</span>
+                  <span className="text-gray-400">Very Satisfied (5/5)</span>
                   <span className="text-emerald-400 font-bold">85%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Satisfied (4★)</span>
+                  <span className="text-gray-400">Satisfied (4/5)</span>
                   <span className="text-blue-400 font-bold">12%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Neutral (3★)</span>
+                  <span className="text-gray-400">Neutral (3/5)</span>
                   <span className="text-yellow-400 font-bold">3%</span>
                 </div>
               </div>
@@ -248,7 +248,7 @@ export default function ProviderAnalytics() {
                             <td className="px-4 py-3 text-emerald-400 font-bold">${booking.totalPrice?.toFixed(2)}</td>
                             <td className="px-4 py-3">
                               <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-900/30 text-green-300">
-                                ✅ Completed
+                                Completed
                               </span>
                             </td>
                           </tr>

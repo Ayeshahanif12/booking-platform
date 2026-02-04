@@ -13,13 +13,13 @@ export default function TestDB() {
         const data = await res.json();
         
         if (res.ok) {
-          setStatus(`✅ Database Connected: ${data.message}`);
+          setStatus(`Success: Database Connected: ${data.message}`);
         } else {
-          setStatus(`❌ Database Error: ${data.error}`);
+          setStatus(`Error: Database Error: ${data.error}`);
           setError(data.details || '');
         }
       } catch (err: any) {
-        setStatus('❌ Connection Failed');
+        setStatus('Error: Connection Failed');
         setError(err.message);
       }
     };

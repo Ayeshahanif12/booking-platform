@@ -43,7 +43,7 @@ export async function POST(req: any) {
             email: 'admin@bookingplatform.com',
             password: 'Admin@12345',
           },
-          note: '⚠️ SAVE THESE CREDENTIALS SAFELY. Change password after first login!',
+          note: 'SAVE THESE CREDENTIALS SAFELY. Change password after first login!',
         },
       },
       { status: 201 }

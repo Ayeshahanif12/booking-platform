@@ -9,6 +9,8 @@ export default function ServicesSearchPage() {
   const [filteredServices, setFilteredServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [topProviders, setTopProviders] = useState<any[]>([]);
+  const [topLoading, setTopLoading] = useState(true);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +41,7 @@ export default function ServicesSearchPage() {
     }
 
     fetchServices();
+    fetchTopProviders();
 
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -63,6 +66,18 @@ export default function ServicesSearchPage() {
       console.error('Failed to fetch services');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTopProviders = async () => {
+    try {
+      const res = await fetch('/api/providers/top?limit=6');
+      const data = await res.json();
+      setTopProviders(data.providers || []);
+    } catch (error) {
+      console.error('Failed to fetch top providers');
+    } finally {
+      setTopLoading(false);
     }
   };
 
@@ -115,6 +130,17 @@ export default function ServicesSearchPage() {
     router.push(`/services/${serviceId}`);
   };
 
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setPriceRange({ min: 0, max: 1000 });
+    setSelectedRating('all');
+    setFilteredServices(services);
+  };
+
+  const getProviderIdValue = (providerId: any) =>
+    typeof providerId === 'string' ? providerId : providerId?._id;
+
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
       {/* Animated background elements */}
@@ -151,6 +177,84 @@ export default function ServicesSearchPage() {
               Discover <span className="text-gradient">Services</span>
             </h1>
             <p className="text-xl text-gray-300">Find the perfect service for your needs</p>
+          </div>
+
+          {/* Top Providers */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Top Providers</h2>
+              <button
+                onClick={() => router.push('/services')}
+                className="btn-secondary-dark text-sm px-4 py-2"
+              >
+                Browse All
+              </button>
+            </div>
+            {topLoading ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={`provider-skeleton-${idx}`}
+                    className="card-dark border border-slate-700 p-5 animate-pulse"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-slate-700 mb-4"></div>
+                    <div className="h-4 bg-slate-700 rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-slate-700 rounded w-2/3 mb-4"></div>
+                    <div className="h-8 bg-slate-700 rounded w-full"></div>
+                  </div>
+                ))}
+              </div>
+            ) : topProviders.length === 0 ? (
+              <div className="card-dark border border-slate-700 p-8 text-center text-gray-400">
+                <p className="mb-4">No featured providers yet.</p>
+                <button
+                  onClick={() => router.push('/services')}
+                  className="btn-primary-dark"
+                >
+                  Explore Services
+                </button>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {topProviders.map((provider: any) => (
+                  <div key={provider._id} className="card-dark border border-slate-700 p-5">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center font-bold text-lg">
+                        {provider.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold">{provider.name}</p>
+                        <p className="text-xs text-gray-400">{provider.email}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-300 mb-4">
+                      <div className="bg-slate-800/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs">Rating</p>
+                        <p className="font-semibold">{provider.averageRating || 0}/5</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs">Response Rate</p>
+                        <p className="font-semibold">{provider.responseRate || 0}%</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs">Services</p>
+                        <p className="font-semibold">{provider.totalServices || 0}</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs">Completed</p>
+                        <p className="font-semibold">{provider.completedBookings || 0}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/provider/${provider._id}`)}
+                      className="btn-primary-dark w-full text-sm"
+                    >
+                      View Profile
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Search and Filters */}
@@ -244,15 +348,45 @@ export default function ServicesSearchPage() {
             {/* Services Grid */}
             <div className="lg:col-span-3">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-                  <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-500 rounded-full spinner mb-4"></div>
-                  <p className="text-gray-400">Loading services...</p>
+                <div className="space-y-4 animate-fade-in">
+                  {Array.from({ length: 6 }).map((_, idx) => (
+                    <div key={`service-skeleton-${idx}`} className="card-dark border border-slate-700 p-6 animate-pulse">
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <div className="md:w-32 h-32 rounded-lg bg-slate-700"></div>
+                        <div className="flex-1 space-y-3">
+                          <div className="h-5 bg-slate-700 rounded w-1/2"></div>
+                          <div className="h-4 bg-slate-700 rounded w-1/3"></div>
+                          <div className="h-3 bg-slate-700 rounded w-full"></div>
+                          <div className="h-3 bg-slate-700 rounded w-5/6"></div>
+                          <div className="grid md:grid-cols-4 gap-4 pt-2">
+                            <div className="h-12 bg-slate-700 rounded"></div>
+                            <div className="h-12 bg-slate-700 rounded"></div>
+                            <div className="h-12 bg-slate-700 rounded"></div>
+                            <div className="h-12 bg-slate-700 rounded"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : !filteredServices || filteredServices.length === 0 ? (
                 <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
-                  <p className="text-5xl mb-4">🔍</p>
                   <p className="text-2xl font-bold mb-4">No Services Found</p>
                   <p className="text-gray-400">Try adjusting your filters to find more services</p>
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={resetFilters}
+                      className="btn-primary-dark"
+                    >
+                      Reset Filters
+                    </button>
+                    <button
+                      onClick={() => router.push('/dashboard')}
+                      className="btn-secondary-dark"
+                    >
+                      Back to Dashboard
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6 animate-fade-in">
@@ -273,7 +407,7 @@ export default function ServicesSearchPage() {
                         <div className="flex flex-col md:flex-row gap-6">
                           {/* Service Image */}
                           <div className="md:w-32 h-32 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-105 transition-transform">
-                            🎯
+                            Service
                           </div>
 
                           {/* Service Info */}
@@ -281,7 +415,19 @@ export default function ServicesSearchPage() {
                             <div className="flex items-start justify-between mb-2">
                               <div>
                                 <h3 className="text-xl font-bold group-hover:text-blue-400 transition">{service.title}</h3>
-                                <p className="text-gray-400 text-sm">by {service.providerId?.name}</p>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    const providerId = getProviderIdValue(service.providerId);
+                                    if (providerId) {
+                                      router.push(`/provider/${providerId}`);
+                                    }
+                                  }}
+                                  className="text-gray-400 text-sm hover:text-blue-300 transition text-left"
+                                >
+                                  by {service.providerId?.name || 'Unknown provider'}
+                                </button>
                               </div>
                               <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-900/30 text-emerald-300 capitalize">
                                 {service.category}
@@ -301,12 +447,12 @@ export default function ServicesSearchPage() {
                               </div>
                               <div className="bg-slate-800/50 rounded-lg p-3">
                                 <p className="text-gray-400 text-xs mb-1">Rating</p>
-                                <p className="text-lg font-bold text-yellow-400">⭐ {service.rating || 'N/A'}</p>
+                                <p className="text-lg font-bold text-yellow-400">Rating {service.rating || 'N/A'}</p>
                               </div>
                               <div className="bg-slate-800/50 rounded-lg p-3">
                                 <p className="text-gray-400 text-xs mb-1">Availability</p>
                                 <p className="text-lg font-bold text-purple-400">
-                                  {service.available ? '✅ Yes' : '❌ No'}
+                                  {service.available ? 'Yes' : 'No'}
                                 </p>
                               </div>
                             </div>

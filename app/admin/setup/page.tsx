@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function AdminSetup() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [adminCreated, setAdminCreated] = useState(false);
   const [credentials, setCredentials] = useState<any>(null);
@@ -21,13 +23,13 @@ export default function AdminSetup() {
         setCredentials(data.admin.credentials);
         setAdminCreated(true);
       } else {
-        alert('Admin already exists or error occurred');
+        showToast('Admin already exists or error occurred', 'error');
         // Try to login
         router.push('/login');
       }
     } catch (error) {
       console.error('Failed to create admin');
-      alert('Error creating admin');
+      showToast('Error creating admin', 'error');
     } finally {
       setLoading(false);
     }
@@ -83,7 +85,7 @@ export default function AdminSetup() {
 
               <div className="bg-yellow-900 border border-yellow-700 p-3 rounded">
                 <p className="text-yellow-200 text-sm">
-                  ⚠️ Save these credentials safely. You'll need them to login. Change the password after first login!
+                  Note: Save these credentials safely. You'll need them to login. Change the password after first login!
                 </p>
               </div>
             </div>

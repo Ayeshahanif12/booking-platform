@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function ProviderServices() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -90,7 +92,7 @@ export default function ProviderServices() {
     const token = localStorage.getItem('token');
 
     if (!formData.title || !formData.description || !formData.pricePerHour) {
-      alert('Please fill all required fields');
+      showToast('Please fill all required fields', 'error');
       return;
     }
 
@@ -128,10 +130,10 @@ export default function ProviderServices() {
           duration: '60',
         });
       } else {
-        alert('Failed to save service');
+        showToast('Failed to save service', 'error');
       }
     } catch (error) {
-      alert('Error saving service');
+      showToast('Error saving service', 'error');
     }
   };
 
@@ -151,7 +153,7 @@ export default function ProviderServices() {
         await fetchServices();
       }
     } catch (error) {
-      alert('Failed to delete service');
+      showToast('Failed to delete service', 'error');
     }
   };
 
@@ -238,7 +240,7 @@ export default function ProviderServices() {
             </div>
           ) : !services || services.length === 0 ? (
             <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
-              <p className="text-5xl mb-4">⭐</p>
+              <p className="text-xl mb-4">No services</p>
               <p className="text-2xl font-bold mb-4">No Services Yet</p>
               <p className="text-gray-400 mb-6">Create your first service to start accepting bookings</p>
               <button
@@ -266,7 +268,7 @@ export default function ProviderServices() {
                       </p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-900/30 text-emerald-300">
-                      {service.available ? '✅ Available' : '🔒 Unavailable'}
+                      {service.available ? 'Available' : 'Unavailable'}
                     </span>
                   </div>
 
@@ -285,7 +287,7 @@ export default function ProviderServices() {
                     </div>
                     <div>
                       <p className="text-gray-400 text-xs">Rating</p>
-                      <p className="font-bold text-yellow-400">⭐ {service.rating || 'N/A'}</p>
+                      <p className="font-bold text-yellow-400">Rating {service.rating || 'N/A'}</p>
                     </div>
                   </div>
 

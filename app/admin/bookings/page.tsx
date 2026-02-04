@@ -79,13 +79,13 @@ export default function AdminBookings() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
-        return '⏳';
+        return '';
       case 'accepted':
-        return '✅';
+        return '';
       case 'rejected':
-        return '❌';
+        return '';
       default:
-        return '📋';
+        return '';
     }
   };
 
@@ -175,7 +175,7 @@ export default function AdminBookings() {
             </div>
           ) : filteredBookings.length === 0 ? (
             <div className="card-dark p-12 text-center border border-slate-700 animate-scale-in">
-              <p className="text-5xl mb-4">📋</p>
+              <p className="text-xl mb-4">No bookings</p>
               <p className="text-2xl font-bold mb-4">No Bookings Found</p>
               <p className="text-gray-400">No bookings match your filter criteria</p>
             </div>

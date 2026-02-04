@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [stats, setStats] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
@@ -194,10 +196,10 @@ function ProvidersTab() {
       });
 
       if (res.ok) {
-        alert('Provider deleted successfully');
+        showToast('Provider deleted successfully', 'success');
         fetchProviders();
       } else {
-        alert('Failed to delete provider');
+        showToast('Failed to delete provider', 'error');
       }
     } catch (error) {
       console.error('Failed to delete provider');
@@ -336,7 +338,7 @@ function ServicesTab() {
       });
 
       if (res.ok) {
-        alert('Service deleted');
+        showToast('Service deleted', 'success');
         fetchServices();
       }
     } catch (error) {
@@ -427,7 +429,7 @@ function BookingsTab() {
       });
 
       if (res.ok) {
-        alert('Booking deleted');
+        showToast('Booking deleted', 'success');
         fetchBookings();
       }
     } catch (error) {

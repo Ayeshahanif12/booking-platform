@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function ProviderProfile() {
   const params = useParams();
@@ -10,11 +11,12 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [showProviderId, setShowProviderId] = useState(false);
   
   // Booking state
   const [bookingModal, setBookingModal] = useState<any>(null);
   const [bookingData, setBookingData] = useState({ date: '', time: '' });
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -52,8 +54,16 @@ export default function ProviderProfile() {
     }
 
     if (!bookingData.date || !bookingData.time) {
-      setNotification({ message: 'Please select date and time', type: 'error' });
-      setTimeout(() => setNotification(null), 3000);
+      showToast('Please select date and time', 'error');
+      return;
+    }
+
+    const today = new Date();
+    const selectedDate = new Date(bookingData.date);
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      showToast('You cannot book a past date', 'error');
       return;
     }
 
@@ -81,42 +91,22 @@ export default function ProviderProfile() {
       });
 
       if (res.ok) {
-        setNotification({ message: 'Booking created successfully! Amount: $' + totalPrice.toFixed(2), type: 'success' });
-        setTimeout(() => setNotification(null), 4000);
+        showToast(`Booking created successfully! Amount: $${totalPrice.toFixed(2)}`, 'success');
         setBookingModal(null);
         setBookingData({ date: '', time: '' });
         if (params.id) fetchProviderServices(params.id as string);
       } else {
         const errorData = await res.json();
-        setNotification({ message: errorData.error || 'Failed to create booking', type: 'error' });
-        setTimeout(() => setNotification(null), 4000);
+        showToast(errorData.error || 'Failed to create booking', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      setNotification({ message: 'Error creating booking', type: 'error' });
-      setTimeout(() => setNotification(null), 4000);
+      showToast('Error creating booking', 'error');
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
-      {/* Notification Toast */}
-      {notification && (
-        <div className={`fixed top-24 right-4 z-[60] px-6 py-4 rounded-lg shadow-xl animate-slide-in border backdrop-blur-md ${
-          notification.type === 'success' 
-            ? 'bg-emerald-900/90 border-emerald-500 text-white' 
-            : 'bg-red-900/90 border-red-500 text-white'
-        }`}>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{notification.type === 'success' ? '✅' : '⚠️'}</span>
-            <div>
-              <h4 className="font-bold">{notification.type === 'success' ? 'Success' : 'Error'}</h4>
-              <p className="text-sm opacity-90">{notification.message}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
@@ -179,14 +169,28 @@ export default function ProviderProfile() {
                   {provider.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{provider.name}</h1>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowProviderId((prev) => !prev)}
+                      className="text-left hover:text-blue-300 transition"
+                      aria-expanded={showProviderId}
+                    >
+                      {provider.name}
+                    </button>
+                  </h1>
+                  {showProviderId && provider._id && (
+                    <p className="text-xs text-slate-400 font-mono mb-2">
+                      Provider ID: {provider._id}
+                    </p>
+                  )}
                   <div className="flex flex-wrap items-center gap-4 text-gray-300">
                     <p className="flex items-center gap-2">
-                      <span className="text-blue-400">📧</span> {provider.email}
+                      <span className="text-blue-400">Email:</span> {provider.email}
                     </p>
                     {provider.averageRating > 0 && (
                       <span className="flex items-center gap-1 bg-yellow-400/10 px-3 py-1 rounded-full border border-yellow-400/20 text-yellow-400 font-semibold">
-                        <span>★</span> {provider.averageRating.toFixed(1)} Rating
+                        Rating {provider.averageRating.toFixed(1)}
                       </span>
                     )}
                     <span className="bg-slate-800 px-3 py-1 rounded-full text-sm border border-slate-600">
@@ -300,6 +304,7 @@ export default function ProviderProfile() {
                   onChange={(e) =>
                     setBookingData({ ...bookingData, date: e.target.value })
                   }
+                  min={new Date().toISOString().split('T')[0]}
                   className="input-dark w-full"
                   required
                 />
