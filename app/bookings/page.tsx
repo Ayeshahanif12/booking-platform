@@ -10,6 +10,11 @@ export default function Bookings() {
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const { showToast } = useToast();
+  const [ratingModal, setRatingModal] = useState<any>(null);
+  const [messageModal, setMessageModal] = useState<any>(null);
+  const [ratingValue, setRatingValue] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [messageText, setMessageText] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -82,6 +87,43 @@ export default function Bookings() {
     } catch (error) {
       showToast('Error cancelling booking', 'error');
     }
+  };
+
+  const submitRating = async () => {
+    if (!ratingModal?._id) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/bookings?id=${ratingModal._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating: ratingValue, review: reviewText }),
+      });
+      if (res.ok) {
+        showToast('Rating submitted', 'success');
+        setRatingModal(null);
+        setReviewText('');
+        fetchBookings();
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to submit rating', 'error');
+      }
+    } catch {
+      showToast('Failed to submit rating', 'error');
+    }
+  };
+
+  const submitMessage = () => {
+    if (!messageText.trim()) {
+      showToast('Please enter a message', 'error');
+      return;
+    }
+    showToast('Message sent (demo)', 'success');
+    setMessageText('');
+    setMessageModal(null);
   };
 
   const getProviderIdValue = (providerId: any) =>
@@ -264,10 +306,27 @@ export default function Bookings() {
                               Cancel
                             </button>
                           )}
-                          {booking.status === 'accepted' && (
+                          {['accepted', 'completed'].includes(booking.status) && (
                             <>
-                              <button className="btn-primary-dark text-sm">Rate</button>
-                              <button className="btn-secondary-dark text-sm">Message</button>
+                              <button
+                                className="btn-primary-dark text-sm"
+                                onClick={() => {
+                                  setRatingModal(booking);
+                                  setRatingValue(5);
+                                  setReviewText(booking.review || '');
+                                }}
+                              >
+                                Rate
+                              </button>
+                              <button
+                                className="btn-secondary-dark text-sm"
+                                onClick={() => {
+                                  setMessageModal(booking);
+                                  setMessageText('');
+                                }}
+                              >
+                                Message
+                              </button>
                             </>
                           )}
                         </div>
@@ -280,6 +339,79 @@ export default function Bookings() {
           )}
         </div>
       </main>
+
+      {ratingModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="card-dark p-6 max-w-md w-full border border-slate-700">
+            <h3 className="text-2xl font-bold mb-2">Rate Service</h3>
+            <p className="text-gray-400 text-sm mb-4">{ratingModal.serviceId?.title}</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-300 text-sm mb-2">Rating</label>
+                <select
+                  value={ratingValue}
+                  onChange={(e) => setRatingValue(parseInt(e.target.value))}
+                  className="input-dark w-full"
+                >
+                  {[5, 4, 3, 2, 1].map((value) => (
+                    <option key={value} value={value}>
+                      {value}/5
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-300 text-sm mb-2">Review</label>
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  rows={4}
+                  className="input-dark w-full"
+                  placeholder="Share your experience..."
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button className="btn-primary-dark flex-1" onClick={submitRating}>
+                Submit
+              </button>
+              <button
+                className="btn-secondary-dark flex-1"
+                onClick={() => setRatingModal(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {messageModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="card-dark p-6 max-w-md w-full border border-slate-700">
+            <h3 className="text-2xl font-bold mb-2">Message Provider</h3>
+            <p className="text-gray-400 text-sm mb-4">{messageModal.serviceId?.title}</p>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              rows={5}
+              className="input-dark w-full"
+              placeholder="Write your message..."
+            />
+            <div className="flex gap-3 mt-6">
+              <button className="btn-primary-dark flex-1" onClick={submitMessage}>
+                Send
+              </button>
+              <button
+                className="btn-secondary-dark flex-1"
+                onClick={() => setMessageModal(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-700 bg-slate-900/50 backdrop-blur py-8 px-4 sm:px-6 lg:px-8">
